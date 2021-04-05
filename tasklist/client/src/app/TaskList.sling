@@ -1,0 +1,57 @@
+import jk.widget.common
+import jk.widget.form
+
+class is TitledWidget #widget:
+
+model TaskModel
+{
+    name as string
+    description as string
+}
+
+ui LayerWidget
+{
+    VerticalScrollerWidget {
+        scrollBarDisabled = true
+        LayerWithBackgroundColorWidget container {
+            color = Color.white()
+            VerticalBoxWidget list {
+                margin = context.getHeightValue("5mm")
+                spacing = context.getHeightValue("5mm")
+  
+            }
+        }
+    }
+
+    
+}
+
+
+
+func initializeWidget override
+{
+    base.initializeWidget()
+    var name = TextInputWidget.forType(context,TextInputWidget.TYPE_DEFAULT,"Name ")
+    var desc = TextInputWidget.forType(context,TextInputWidget.TYPE_DEFAULT,"Description")
+    list.addWidget(name)
+    list.addWidget(desc)
+    list.addWidget(TextButtonWidget.forText(context,"Add", func{
+        var task = new TaskModel()
+        task.setName(name.getWidgetText())
+        task.setDescription(desc.getWidgetText())
+
+        APIClient.getInstance().addTask(task.toDynamicMap(), func(res as DynamicMap){
+            list.addWidget(AlignWidget.forWidget(context, LabelWidget.forText(context, "TASK SUCCESSFULLY ADDED")), 1.0)
+        }, func(err as Error){
+            list.addWidget(AlignWidget.forWidget(context, LabelWidget.forText(context, "ADDING TASK FAILED")), 1.0)
+        })
+    }) )
+
+
+    name.focus()
+
+}
+
+func getWidgetTitle as string:
+    return "Eqela Task list"
+    

@@ -1,0 +1,94 @@
+import jk.widget
+import jk.widget.common
+import jk.widget.datagrid
+
+class is TitledWidget #widget:
+
+model TaskModel
+{
+    id as string
+    name as string
+    description as string
+}
+
+ui LayerWidget
+{
+    HorizontalScrollerWidget{
+        scrollBarDisabled = true
+        LayerWithBackgroundColorWidget container{
+            color = Color.white()
+            VerticalBoxWidget list{
+                margin = context.getHeightValue("5mm")
+                spacing = context.getHeightValue("5mm")
+                TextInputWidget id {
+                    type = TextInputWidget.TYPE_INTEGER
+					placeholder = "ID"
+                    backgroundColor = Color.instance("#b0b0b0")
+                    fontSize = context.getHeightValue("3mm")
+					padding = context.getHeightValue("2500um")
+                }
+                TextInputWidget name {
+                    type = TextInputWidget.TYPE_DEFAULT
+					placeholder = "Name"
+                    backgroundColor = Color.instance("#b0b0b0")
+                    fontSize = context.getHeightValue("3mm")
+					padding = context.getHeightValue("2500um")
+                }
+                TextInputWidget desc {
+                    type = TextInputWidget.TYPE_DEFAULT
+					placeholder = "Description"
+                    backgroundColor = Color.instance("#b0b0b0")
+                    fontSize = context.getHeightValue("3mm")
+					padding = context.getHeightValue("2500um")
+                }
+                TextButtonWidget addTaskBtn{
+                    fontSize = context.getHeightValue("3mm")
+                    text ="Add Task"
+                    clickHandler = func{
+                        var task = new TaskModel()
+                        task.setId(id.getWidgetText())
+                        task.setName(name.getWidgetText())
+                        task.setDescription(desc.getWidgetText())
+                        APIClient.getInstance().addTask(task.toDynamicMap(), func(res as DynamicMap){
+                            context.showMessageDialog("Notice", "Task Added Successfully")
+                            NavigationWidget.switchToContainer(this, new TaskListAdd(context))
+                        }, func(err as Error){
+                            context.showMessageDialog("Notice", "Failed To Add Task")
+                        })
+                    }
+                }
+                DataGridWidget grid : 1.0 {
+
+				}
+            }
+        }
+    }
+}
+
+func initializeWidget override
+{
+    base.initializeWidget()
+    id.focus()
+    grid.addColumn("ID", "id", 0.3)
+    grid.addColumn("Task Name", "name", 0.5)
+    grid.addColumn("Description", "desc", 1.0)
+    grid.addWidgetHeaderRow()
+    APIClient.getInstance().getTasks(func(response as DynamicMap){
+        var data = assert response.getDynamicMap("data")
+        var records = data.getDynamicVector("records")
+        if not records || records.getSize() < 1{
+            list.addWidget(AlignWidget.forWidget(context, LabelWidget.forText(context, "No Record")), 1.0)
+        }
+        else {
+            foreach record as DynamicMap in records.toVector() {
+                var task = record.getString("name") .. " - " .. record.getString("description")
+                var lblTask = LabelWidget.forText(context, task)
+                grid.addRow([record.getString("id"),record.getString("name"),record.getString("description")])
+            }
+        }
+    })
+}
+
+func getWidgetTitle as string:
+    return "Eqela Task list"
+    

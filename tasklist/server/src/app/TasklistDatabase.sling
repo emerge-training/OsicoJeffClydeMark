@@ -48,13 +48,14 @@ func updateTables
     task.addStringKeyColumn("id")
     task.addStringColumn("name")
     task.addStringColumn("description")
+    task.addLongColumn("timeStampAdded")
+    task.addLongColumn("timeStampLastUpdated")
     updateTable(task)
 }
 
 func addTask(task as Task) as Task
 {
     assert task
-    task.setId("1")
     task.setTimeStampAddedValue(SystemClock.asUTCSeconds())
     assert db.executeSync(db.prepareInsertStatementSync(TASK, task.toDynamicMap()))
     return task
